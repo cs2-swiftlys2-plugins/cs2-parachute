@@ -1,0 +1,7 @@
+[Parachute.settings]
+fall_speed = 85.0
+linear = true
+model = ""
+decrease = 15.0
+admin_flag = ""
+disable_when_carrying_hostage = false
