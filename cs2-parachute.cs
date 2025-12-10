@@ -29,8 +29,8 @@ public sealed class Settings
     public bool DisableWhenCarryingHostage { get; set; } = false;
 }
 
-[PluginMetadata(Id = "Parachute", Version = "v1", Name = "Parachute", Author = "schwarper")]
-public sealed class ReservedSlots(ISwiftlyCore core) : BasePlugin(core)
+[PluginMetadata(Id = "Parachute", Version = "v2", Name = "Parachute", Author = "schwarper")]
+public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
 {
     public class PlayerData
     {
@@ -40,12 +40,13 @@ public sealed class ReservedSlots(ISwiftlyCore core) : BasePlugin(core)
     }
 
     public IConVar<bool> sv_parachute = null!;
-    private readonly PlayerData?[] _playerDatas = new PlayerData[core.Engine.GlobalVars.MaxClients];
+    private PlayerData?[] _playerDatas = null!;
 
     public static Config Config { get; set; } = null!;
 
     public override void Load(bool hotReload)
     {
+        _playerDatas = new PlayerData[Core.Engine.GlobalVars.MaxClients];
         sv_parachute = Core.ConVar.Find<bool>("sv_parachute") ?? Core.ConVar.Create("sv_parachute", "Parachute on/off", true);
 
         const string ConfigFileName = "config.toml";
