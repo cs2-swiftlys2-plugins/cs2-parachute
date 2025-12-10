@@ -29,7 +29,7 @@ public sealed class Settings
     public bool DisableWhenCarryingHostage { get; set; } = false;
 }
 
-[PluginMetadata(Id = "Parachute", Version = "v2", Name = "Parachute", Author = "schwarper")]
+[PluginMetadata(Id = "Parachute", Version = "v3", Name = "Parachute", Author = "schwarper")]
 public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
 {
     public class PlayerData
@@ -39,16 +39,13 @@ public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
         public bool HasPermission;
     }
 
-    public IConVar<bool> sv_parachute = null!;
-    private PlayerData?[] _playerDatas = null!;
+    public IConVar<bool>? sv_parachute;
+    private readonly PlayerData?[] _playerDatas = new PlayerData[64];
 
     public static Config Config { get; set; } = null!;
 
     public override void Load(bool hotReload)
     {
-        _playerDatas = new PlayerData[Core.Engine.GlobalVars.MaxClients];
-        sv_parachute = Core.ConVar.Find<bool>("sv_parachute") ?? Core.ConVar.Create("sv_parachute", "Parachute on/off", true);
-
         const string ConfigFileName = "config.toml";
         const string ConfigSection = "Parachute";
         Core.Configuration
@@ -72,6 +69,8 @@ public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
                 InitPlayer(player);
             }
         }
+
+        sv_parachute = Core.ConVar.Find<bool>("sv_parachute") ?? Core.ConVar.Create("sv_parachute", "Parachute on/off", true);
     }
 
     public override void Unload()
@@ -111,7 +110,7 @@ public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
         _playerDatas[player.PlayerID] = data;
     }
 
-    [GameEventHandler(HookMode.Pre)]
+    [GameEventHandler(HookMode.Post)]
     public HookResult OnPlayerConnect(EventPlayerConnectFull @event)
     {
         if (@event.UserIdPlayer is { } player) InitPlayer(player);
@@ -168,7 +167,8 @@ public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
     [EventListener<EventDelegates.OnTick>]
     public void OnTick()
     {
-        if (!sv_parachute.Value) return;
+        if (sv_parachute?.Value is not true)
+            return;
 
         var allPlayers = Core.PlayerManager.GetAllPlayers();
         bool hasParachuteModel = !string.IsNullOrEmpty(Config.Settings.Model);
