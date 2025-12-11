@@ -29,7 +29,7 @@ public sealed class Settings
     public bool DisableWhenCarryingHostage { get; set; } = false;
 }
 
-[PluginMetadata(Id = "Parachute", Version = "v3", Name = "Parachute", Author = "schwarper")]
+[PluginMetadata(Id = "Parachute", Version = "v4", Name = "Parachute", Author = "schwarper")]
 public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
 {
     public class PlayerData
@@ -37,6 +37,7 @@ public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
         public CDynamicProp? Entity;
         public bool Flying;
         public bool HasPermission;
+        public bool SkipTick = true;
     }
 
     public IConVar<bool>? sv_parachute;
@@ -203,9 +204,13 @@ public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
                     continue;
                 }
 
-                if (hasParachuteModel && playerData.Entity == null)
+                if (hasParachuteModel)
                 {
-                    playerData.Entity = CreateParachute(playerPawn);
+                    playerData.Entity ??= CreateParachute(playerPawn);
+                    playerData.SkipTick = !playerData.SkipTick;
+
+                    if (!playerData.SkipTick)
+                        playerData.Entity?.Teleport(playerPawn.AbsOrigin, playerPawn.AbsRotation, playerPawn.AbsVelocity);
                 }
 
                 velocity.Z = (velocity.Z >= Config.Settings.FallSpeed && Config.Settings.Linear) || Config.Settings.Decrease == 0.0f
@@ -236,11 +241,11 @@ public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
         entity.Teleport(playerPawn.AbsOrigin, QAngle.Zero, Vector.Zero);
         entity.DispatchSpawn();
         entity.SetModel(Config.Settings.Model);
-        entity.AcceptInput("SetParent", "!activator", playerPawn, playerPawn);
+
         return entity;
     }
 
-    private void RemoveParachute(PlayerData? playerData)
+    private static void RemoveParachute(PlayerData? playerData)
     {
         if (playerData?.Entity?.IsValid is true)
         {
