@@ -29,7 +29,7 @@ public sealed class Settings
     public bool DisableWhenCarryingHostage { get; set; } = false;
 }
 
-[PluginMetadata(Id = "Parachute", Version = "v4", Name = "Parachute", Author = "schwarper")]
+[PluginMetadata(Id = "Parachute", Version = "v5", Name = "Parachute", Author = "schwarper")]
 public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
 {
     public class PlayerData
@@ -176,8 +176,12 @@ public sealed class Parachute(ISwiftlyCore core) : BasePlugin(core)
 
         foreach (var player in allPlayers)
         {
+            if (!player.IsValid)
+                continue;
+
             int pId = player.PlayerID;
-            if (pId < 0 || pId >= _playerDatas.Length) continue;
+            if (pId < 0 || pId >= _playerDatas.Length)
+                continue;
 
             var playerData = _playerDatas[pId];
 
